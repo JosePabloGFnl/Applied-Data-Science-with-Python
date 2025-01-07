@@ -1,5 +1,6 @@
 # version 1.1
 
+import os
 import numpy
 import pandas as pd
 import seaborn as sn
@@ -16,12 +17,12 @@ def load_crime_dataset():
     # Communities and Crime dataset for regression
     # https://archive.ics.uci.edu/ml/datasets/Communities+and+Crime+Unnormalized
 
-    crime = pd.read_table('readonly/CommViolPredUnnormalizedData.txt', sep=',', na_values='?')
+    crime = pd.read_table(os.getenv('CRIME_DATA_FILE_PATH'), sep=',', na_values='?')
     # remove features with poor coverage or lower relevance, and keep ViolentCrimesPerPop target column
     columns_to_keep = [5, 6] + list(range(11,26)) + list(range(32, 103)) + [145]  
-    crime = crime.ix[:,columns_to_keep].dropna()
+    crime = crime.iloc[:,columns_to_keep].dropna()
 
-    X_crime = crime.ix[:,range(0,88)]
+    X_crime = crime.iloc[:,range(0,88)]
     y_crime = crime['ViolentCrimesPerPop']
 
     return (X_crime, y_crime)
@@ -61,9 +62,11 @@ def plot_labelled_scatter(X, y, class_labels):
     cmap_bold = ListedColormap(color_array)
     bnorm = BoundaryNorm(numpy.arange(0, num_labels + 1, 1), ncolors=num_labels)
     plt.figure()
-
-    plt.scatter(X[:, 0], X[:, 1], s=65, c=y, cmap=cmap_bold, norm = bnorm, alpha = 0.40, edgecolor='black', lw = 1)
-
+    
+    try:
+        plt.scatter(X[:, 0], X[:, 1], s=65, c=y.values.reshape(1,-1), cmap=cmap_bold, norm = bnorm, alpha = 0.40, edgecolor='black', lw = 1)
+    except:
+        plt.scatter(X[:, 0], X[:, 1], s=65, c=y, cmap=cmap_bold, norm = bnorm, alpha = 0.40, edgecolor='black', lw = 1)
     plt.xlim(x_min, x_max)
     plt.ylim(y_min, y_max)
 
@@ -169,8 +172,8 @@ def plot_class_regions_for_classifier(clf, X, y, X_test=None, y_test=None, title
     plt.show()
     
 def plot_fruit_knn(X, y, n_neighbors, weights):
-    X_mat = X[['height', 'width']].as_matrix()
-    y_mat = y.as_matrix()
+    X_mat = X[['height', 'width']].values
+    y_mat = y.values
 
     # Create color maps
     cmap_light = ListedColormap(['#FFAAAA', '#AAFFAA', '#AAAAFF','#AFAFAF'])
